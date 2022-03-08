@@ -39,7 +39,7 @@ void zipDir(char* dir, FILE* out) {
   struct dirent* entry;
   struct stat statbuf;
   if ((dp = opendir(dir)) == NULL) {
-    fprintf(stderr, "Cannot open directory: %s\n", dir);
+    fprintf(stderr, "Error, can`t open directory: %s\n", dir);
     return;
   }
 
@@ -62,7 +62,7 @@ void zipDir(char* dir, FILE* out) {
 void Zip(char* in_path, char* out_path) {
   FILE* out = fopen(out_path, "w");
   if (out == NULL) {
-    fprintf(stderr, "Create error: %s\n", out_path);
+    fprintf(stderr, "Error, can`t create file: %s\n", out_path);
     exit(1);
   }
   zipDir(in_path, out);
@@ -74,7 +74,7 @@ void createFile(char* fileName, FILE* in) {
   size_t createTime;
   FILE* out = fopen(fileName, "w");
   if (out == NULL) {
-    fprintf(stderr, "Error, cann`t create file: %s\n", fileName);
+    fprintf(stderr, "Error, can`t create file: %s\n", fileName);
     return;
   }
   fscanf(in, "%li,%li\n", &fileSize, &createTime);
@@ -95,7 +95,7 @@ void UnZip(char* archPath, char* path) {
   }
   FILE* in = fopen(archPath, "r");
   if (in == NULL) {
-    fprintf(stderr, "Error, cann`t open archive file: %s\n", archPath);
+    fprintf(stderr, "Error, can`t open archive file: %s\n", archPath);
     exit(1);
   }
 
