@@ -1,2 +1,2 @@
 all:
-	gcc -o main ./h.c
+	gcc -o main ./archive.c
