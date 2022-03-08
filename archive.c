@@ -15,7 +15,7 @@ const char* DIR_END = "DIR_END";
 void copyFile(char* fileName, FILE* out) {
   FILE* in = fopen(fileName, "r");
   if (in == NULL) {
-    fprintf(stderr, "Read error: %s\n", fileName);
+    fprintf(stderr, "Error, cann`t read file: %s\n", fileName);
     return;
   }
   struct stat fileStat;
@@ -33,10 +33,6 @@ void copyFile(char* fileName, FILE* out) {
   fclose(in);
 }
 
-void copyDir(char* dirName, FILE* out) {
-  fprintf(out, "%s\n%s\n", dirName, DIR_TYPE);
-}
-
 void zipDir(char* dir, FILE* out) {
   DIR* dp;
 
@@ -44,7 +40,7 @@ void zipDir(char* dir, FILE* out) {
   struct stat statbuf;
   if ((dp = opendir(dir)) == NULL) {
     fprintf(stderr, "Cannot open directory: %s\n", dir);
-    exit(1);
+    return;
   }
 
   chdir(dir);
@@ -53,7 +49,7 @@ void zipDir(char* dir, FILE* out) {
     if (S_ISDIR(statbuf.st_mode)) {
       if (strcmp(".", entry->d_name) == 0 || strcmp("..", entry->d_name) == 0)
         continue;
-      copyDir(entry->d_name, out);
+      fprintf(out, "%s\n%s\n", entry->d_name, DIR_TYPE);
       zipDir(entry->d_name, out);
       fprintf(out, "%s\n", DIR_END);
     } else
@@ -79,7 +75,7 @@ void createFile(char* fileName, FILE* in) {
   FILE* out = fopen(fileName, "w");
   if (out == NULL) {
     fprintf(stderr, "Error, cann`t create file: %s\n", fileName);
-    exit(1);
+    return;
   }
   fscanf(in, "%li,%li\n", &fileSize, &createTime);
   if (fileSize > 0) {
@@ -92,7 +88,17 @@ void createFile(char* fileName, FILE* in) {
   fclose(out);
 }
 
-void unzipDir(char* path, FILE* in) {
+void UnZip(char* archPath, char* path) {
+  if (access(archPath, F_OK) != 0) {
+    fprintf(stderr, "Error, archive file doesn`t exist: %s\n", archPath);
+    exit(1);
+  }
+  FILE* in = fopen(archPath, "r");
+  if (in == NULL) {
+    fprintf(stderr, "Error, cann`t open archive file: %s\n", archPath);
+    exit(1);
+  }
+
   char title[100];
   char type[8];
   chdir(path);
@@ -108,23 +114,9 @@ void unzipDir(char* path, FILE* in) {
     } else if (strcmp(type, FILE_TYPE) == 0) {
       createFile(title, in);
     } else {
-      fprintf(stderr, "Type error: %s\n", type);
+      fprintf(stderr, "Error, unknown type: %s\n", type);
     }
   }
-}
-
-void UnZip(char* archPath, char* path) {
-  if (access(archPath, F_OK) != 0) {
-    fprintf(stderr, "Error, archive file doesn`t exist: %s\n", archPath);
-    exit(1);
-  }
-  FILE* in = fopen(archPath, "r");
-  if (in == NULL) {
-    fprintf(stderr, "Error, cann`t open archive file: %s\n", archPath);
-    exit(1);
-  }
-
-  unzipDir(path, in);
 
   fclose(in);
 }
