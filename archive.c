@@ -48,14 +48,14 @@ void zipDir(char* dir, FILE* out) {
     lstat(entry->d_name, &statbuf);
     if (S_ISDIR(statbuf.st_mode)) {
       if (strcmp(".", entry->d_name) == 0 || strcmp("..", entry->d_name) == 0)
-        continue;
+        continue;  // Skip files with . and .. prefix
       fprintf(out, "%s\n%s\n", entry->d_name, DIR_TYPE);
       zipDir(entry->d_name, out);
       fprintf(out, "%s\n", DIR_END);
     } else
-      copyFile(entry->d_name, out);
+      copyFile(entry->d_name, out);  // Copy file data in output
   }
-  chdir("..");
+  chdir("..");  // Go to prev dir
   closedir(dp);
 }
 
@@ -72,7 +72,7 @@ void Zip(char* in_path, char* out_path) {
 void createFile(char* fileName, FILE* in) {
   size_t fileSize;
   size_t createTime;
-  FILE* out = fopen(fileName, "w");
+  FILE* out = fopen(fileName, "w");  // Create file
   if (out == NULL) {
     fprintf(stderr, "Error, can`t create file: %s\n", fileName);
     return;
@@ -81,7 +81,7 @@ void createFile(char* fileName, FILE* in) {
   if (fileSize > 0) {
     size_t count = 0;
     while (count++ < fileSize) {
-      fprintf(out, "%c", fgetc(in));
+      fprintf(out, "%c", fgetc(in));  // Load new file
     }
   }
 
@@ -89,6 +89,7 @@ void createFile(char* fileName, FILE* in) {
 }
 
 void UnZip(char* archPath, char* path) {
+  // Check file is exist
   if (access(archPath, F_OK) != 0) {
     fprintf(stderr, "Error, archive file doesn`t exist: %s\n", archPath);
     exit(1);
@@ -101,18 +102,18 @@ void UnZip(char* archPath, char* path) {
 
   char title[100];
   char type[8];
-  chdir(path);
+  chdir(path);  // Go to outpath dir
   while (fscanf(in, "%s", title) != EOF) {
     if (strcmp(title, DIR_END) == 0) {
-      chdir("..");
+      chdir("..");  // Go back
       continue;
     }
     fscanf(in, "%s", type);
     if (strcmp(type, DIR_TYPE) == 0) {
-      mkdir(title, S_IRUSR | S_IWUSR | S_IXUSR);
-      chdir(title);
+      mkdir(title, S_IRUSR | S_IWUSR | S_IXUSR);  // Create dir
+      chdir(title);                               // Go to created dir
     } else if (strcmp(type, FILE_TYPE) == 0) {
-      createFile(title, in);
+      createFile(title, in);  // Create file
     } else {
       fprintf(stderr, "Error, unknown type: %s\n", type);
     }
@@ -126,6 +127,7 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "Error, unexpected number of elements: %i\n", argc - 1);
     exit(1);
   }
+  // Parse cmd line
   char* command = argv[1];
   char* in_path = argv[2];
   char* out_path = argv[3];
