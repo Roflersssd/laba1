@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <utime.h>
 
 const char* FILE_TYPE = "FILE";
 const char* DIR_TYPE = "DIR";
@@ -22,8 +23,8 @@ void copyFile(char* fileName, FILE* out) {
   stat(fileName, &fileStat);
   char date[100];
   strcpy(date, ctime(&fileStat.st_mtime));
-  fprintf(out, "%s\n%s\n%li,%li\n", fileName, FILE_TYPE, fileStat.st_size,
-          fileStat.st_mtime);
+  fprintf(out, "%s\n%s\n%li,%li,%li\n", fileName, FILE_TYPE, fileStat.st_size,
+          fileStat.st_atime, fileStat.st_mtime);
   char buffer[128];
   while (!feof(in)) {
     if (fgets(buffer, sizeof(buffer), in)) {
@@ -71,13 +72,13 @@ void Zip(char* in_path, char* out_path) {
 
 void createFile(char* fileName, FILE* in) {
   size_t fileSize;
-  size_t createTime;
+  struct utimbuf times;
   FILE* out = fopen(fileName, "w");  // Create file
   if (out == NULL) {
     fprintf(stderr, "Error, can`t create file: %s\n", fileName);
     return;
   }
-  fscanf(in, "%li,%li\n", &fileSize, &createTime);
+  fscanf(in, "%li,%li,%li\n", &fileSize, &times.actime, &times.modtime);
   if (fileSize > 0) {
     size_t count = 0;
     while (count++ < fileSize) {
@@ -86,6 +87,8 @@ void createFile(char* fileName, FILE* in) {
   }
 
   fclose(out);
+
+  utime(fileName, &times);
 }
 
 void UnZip(char* archPath, char* path) {
