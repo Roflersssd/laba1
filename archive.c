@@ -1,5 +1,6 @@
 #include <dirent.h>
 #include <fcntl.h>
+#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +15,7 @@ const char* DIR_TYPE = "DIR";
 const char* DIR_END = "DIR_END";
 
 void copyFile(char* fileName, FILE* out) {
-  FILE* in = fopen(fileName, "r");
+  FILE* in = fopen(fileName, "rb");
   if (in == NULL) {
     fprintf(stderr, "Error, cann`t read file: %s\n", fileName);
     return;
@@ -80,10 +81,10 @@ void createFile(char* fileName, FILE* in) {
   }
   fscanf(in, "%li,%li,%li\n", &fileSize, &times.actime, &times.modtime);
   if (fileSize > 0) {
-    size_t count = 0;
-    while (count++ < fileSize) {
-      fprintf(out, "%c", fgetc(in));  // Load new file
-    }
+    char* buf = (char*)malloc(fileSize * sizeof(char) + 1);
+    fread(buf, sizeof(char), fileSize, in);
+    fprintf(out, "%s", buf);
+    free(buf);
   }
 
   fclose(out);
@@ -97,7 +98,7 @@ void UnZip(char* archPath, char* path) {
     fprintf(stderr, "Error, archive file doesn`t exist: %s\n", archPath);
     exit(1);
   }
-  FILE* in = fopen(archPath, "r");
+  FILE* in = fopen(archPath, "rb");
   if (in == NULL) {
     fprintf(stderr, "Error, can`t open archive file: %s\n", archPath);
     exit(1);
