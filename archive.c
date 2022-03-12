@@ -81,10 +81,13 @@ void createFile(char* fileName, FILE* in) {
   }
   fscanf(in, "%li,%li,%li\n", &fileSize, &times.actime, &times.modtime);
   if (fileSize > 0) {
-    char* buf = (char*)malloc(fileSize * sizeof(char) + 1);
-    fread(buf, sizeof(char), fileSize, in);
-    fprintf(out, "%s", buf);
-    free(buf);
+    char* buf;
+    if (fileSize != fread(buf, sizeof(char), fileSize, in)) {
+      fprintf(stderr, "Error, read unexpected number of elements in: %s\n",
+              fileName);
+      return;
+    }
+    fwrite(buf, sizeof(char), fileSize, out);
   }
 
   fclose(out);
